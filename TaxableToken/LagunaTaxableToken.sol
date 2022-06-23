@@ -377,7 +377,8 @@ contract ERC20 is Context, Ownable,IERC20 {
      * Requirements:
      *
      * - `recipient` cannot be the zero address.
-     * - the caller must have a balance of at least `amount`.
+     * - the caller must have a balance of at least `amount`
+     * - amount passed is in Wei
      */
     function transfer(address recipient, uint256 amount) external override returns (bool) {
         require(!isBlackListed[msg.sender],"address has been blacklisted");
@@ -386,8 +387,6 @@ contract ERC20 is Context, Ownable,IERC20 {
         uint256 fee = (amount.mul(taxRate)).div(100);
        
         uint amtToSend = amount.sub(fee);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        _balances[recipient] = _balances[recipient].add(amtToSend);
         if (fee > 0) {
             _balances[owner] = _balances[owner].add(fee);
             
@@ -395,7 +394,7 @@ contract ERC20 is Context, Ownable,IERC20 {
             _transfer(msg.sender, treasuryAddress, fee);
         }
     
-        _transfer(_msgSender(), recipient, amount);
+        _transfer(_msgSender(), recipient, amtToSend);
        
         return true;
     }
@@ -430,6 +429,7 @@ contract ERC20 is Context, Ownable,IERC20 {
      * - `sender` must have a balance of at least `amount`.
      * - the caller must have allowance for `sender`'s tokens of at least
      * `amount`.
+     * - amount passed is in Wei
      */
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         require(!isBlackListed[sender]);
@@ -437,8 +437,6 @@ contract ERC20 is Context, Ownable,IERC20 {
         //to put the taxable code
         uint256 fee = (amount.mul(taxRate)).div(100);
         uint amtToSend = amount.sub(fee);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        _balances[recipient] = _balances[recipient].add(amtToSend);
         if (fee > 0) {
             _balances[owner] = _balances[owner].add(fee);
             
@@ -447,7 +445,7 @@ contract ERC20 is Context, Ownable,IERC20 {
     
         }
       
-        _transfer(sender, recipient, amount);
+        _transfer(sender, recipient, amtToSend);
         _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
 
         return true;
